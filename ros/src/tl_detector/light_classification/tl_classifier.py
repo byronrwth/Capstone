@@ -162,9 +162,7 @@ class TLClassifier(object):
             #if color != self.current_color or (self.img_counter % 5) == 0:
             #    rospy.loginfo('--------' + self.tl2str(color) + '--------' )
             #self.img_counter += 1
-
-                        # print out for debug
-            color = self.classification(traffic_light)
+            
             rospy.loginfo('--------' + self.tl2str(color) + '--------' )
 
             self.current_color = color
@@ -207,5 +205,4 @@ if __name__ == "__main__":
         img = cv2.imread(im)
         if not img is None:
             color = classifier.get_classification(img)
-	    print("--------------",color,"-------------------")
             print (im, 'detected as', classifier.tl2str(color))

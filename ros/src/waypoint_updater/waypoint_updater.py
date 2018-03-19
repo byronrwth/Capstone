@@ -28,6 +28,7 @@ PUBLISH_RATE = 20      # Publishing rate (Hz)
 max_local_distance = 20.0      # Max waypoint distance we admit for a local minimum (m)
 publish_on_light_change = True # Force publishing if next traffic light changes
 debugging = True               # Set to False for release (not too verbose, but it saves some computation power)
+prev_waypoint_min = 0.0
 
 class WaypointUpdater(object):
     def __init__(self):
@@ -278,7 +279,9 @@ class WaypointUpdater(object):
         #rospy.logwarn("waypoint_updater.py: send_final_waypoints(): num_base_wp=" + str(num_base_wp))
         waypoint_idx = [idx % num_base_wp for idx in range(pos,pos+LOOKAHEAD_WPS)]
         #for i in enumerate(waypoint_idx):
-        rospy.logwarn("waypoint_idx["+str(min(waypoint_idx))+" : "+str(max(waypoint_idx))+"]")
+        if prev_waypoint_min != min(waypoint_idx):
+            prev_waypoint_min = min(waypoint_idx)
+            rospy.logwarn("waypoint_idx["+str(min(waypoint_idx))+" : "+str(max(waypoint_idx))+"]")
 
 
         
