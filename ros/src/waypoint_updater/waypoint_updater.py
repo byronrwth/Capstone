@@ -260,8 +260,9 @@ class WaypointUpdater(object):
         if pos2 != pos1:
             rospy.logwarn("find_closest_waypoint() != _update_next_waypoint(): pos1="+str(pos1)+", pos2=" +str(pos2))
 
-        #pos = pos1
-        pos = pos2
+        pos = pos1
+        #pos = pos2
+        
         #rospy.loginfo("####")
         #rospy.loginfo(pos)
         #272

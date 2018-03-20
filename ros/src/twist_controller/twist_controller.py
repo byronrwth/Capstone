@@ -54,6 +54,8 @@ class Controller(object):
         # when needs slow down
         #if linear_velocity < current_velocity:
         #    rospy.logwarn("twist_controller.py: control(): target linear v = " + str(linear_velocity) + " ,current linear v=" +str(current_velocity))
+        rospy.logwarn("twist_controller.py: control(): target v = " + str(linear_velocity) + " ,current v=" +str(current_velocity))
+
 
         if self.time is None or not dbw_state:
             self.time = rospy.get_time()
@@ -74,7 +76,7 @@ class Controller(object):
         steer = self.steering_control.get_steering(linear_velocity, angular_velocity, current_velocity)
         steer = self.steer_control.step(steer, dt)
 
-        throttle = self.TP1_throttle.filt(throttle)
+        throttle_1 = self.TP1_throttle.filt(throttle)
         #rospy.logwarn("twist_controller.py: control(): TP1_throttle: throttle = " + str(throttle) )
 
         linear_velocity_error = linear_velocity - current_velocity
@@ -83,12 +85,15 @@ class Controller(object):
             )
 
         throttle_2 = velocity_correction
+
+        throttle = throttle_1
+        #throttle = throttle_2
         #if linear_velocity_error < 0:
         #    rospy.logwarn("twist_controller.py: control(): linear_velocity_error = "+str(linear_velocity_error)+" ,velocity_correction = " + str(throttle_2))
 
         # we need throttle can be minus, i.e. < 0, when car needs slow down
-        if throttle_2 < 0:
-            deceleration = abs(throttle_2)
+        if throttle < 0:
+            deceleration = abs(throttle)
             throttle = 0.0
             #brake = -throttle
             brake = 100
