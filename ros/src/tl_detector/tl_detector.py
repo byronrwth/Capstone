@@ -20,9 +20,10 @@ import time
 STATE_COUNT_THRESHOLD = 1
 #Traffic Light detection range
 MEASURE_PERFORMANCE = False #True
-TL_DETECTION_RANGE = 100 #1000 #50
+TL_DETECTION_RANGE = 50 #100 #1000 #50
 ProcessingTimeSum = 0
 ProcessingIterations = 0
+ProcessingNo = 0
 
 REDUCE_FREQ = False #True
 
@@ -77,7 +78,7 @@ class TLDetector(object):
         self.lights = msg.lights
 
     def image_cb(self, msg):
-        global ProcessingTimeSum, ProcessingIterations
+        global ProcessingTimeSum, ProcessingIterations, ProcessingNo
         """Identifies red lights in the incoming camera image and publishes the index
             of the waypoint closest to the red light's stop line to /traffic_waypoint
 
@@ -99,9 +100,21 @@ class TLDetector(object):
 
         self.has_image = True
         self.camera_image = msg
-        # start to call classification:
-        light_wp, state = self.process_traffic_lights()
 
+        # need to reduce no. images queued to process, only process the latest received image 
+        ProcessingNo = ProcessingNo + 1
+        self.img_rx_time = time.time()
+        #rospy.loginfo(" recieved image No: ----------" + str(ProcessingNo) + " --------- rx time:" + str(self.img_rx_time))
+
+
+        # start to call classification:
+        if ProcessingNo % 4 == 0: 
+            #rospy.loginfo(" every 5 image to classify:" + str(ProcessingNo))
+            light_wp, state = self.process_traffic_lights()
+        else:
+            self.has_image = False
+            self.camera_image = None
+            return
         '''
         Publish upcoming red lights at camera frequency.
         Each predicted state has to occur `STATE_COUNT_THRESHOLD` number
@@ -212,6 +225,7 @@ class TLDetector(object):
         return dist
 
     def process_traffic_lights(self):
+        global ProcessingNo
         """Finds closest visible traffic light, if one exists, and determines its
             location and color
 
@@ -253,12 +267,17 @@ class TLDetector(object):
             waypoint_num_to_light = abs(car_position - closest_light)
             distance_to_tl = self.get_distance(car_position, closest_light)
 
-        if light:
+        if light == None or light == 0:
+            self.has_image = False
+            self.camera_image = None
+            return -1, TrafficLight.UNKNOWN
+        #if light:
+        else:
             state = TrafficLight.UNKNOWN
             if (distance_to_tl < TL_DETECTION_RANGE):
                 state = self.get_light_state(light)
-
-                #rospy.loginfo("---------"+str(state)+"-------------")
+                process_time = time.time()
+                #rospy.loginfo("process_traffic_lights:---------"+str(state)+"-------------ProcessingNo:  "+ str(ProcessingNo)+"----process time:" + str(process_time))
 
                 #rospy.loginfo("-dist to closest TL- " + str(distance_to_tl))
             return closest_light, state
